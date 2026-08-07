@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+server.log
+data/
+pedidos.db
+pedidos_backup.json
+*.md

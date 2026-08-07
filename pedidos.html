@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedidos · Casa Campestre</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap');
+  :root{
+    --pine:#1E6B2E; --pine-deep:#16451F; --brick:#9A4B32; --brick-dark:#7C3B27;
+    --wheat:#D9B65C; --gold:#B8933E; --parchment:#F1ECDD; --card:#FBF8F0;
+    --ink:#3A2418; --ink-soft:#5A5A4E; --line:#E1D9C3;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--parchment); color:var(--ink);
+    font-family:'DM Sans',sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Fraunces',serif; font-weight:600; margin:0;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+  .topbar{background:radial-gradient(circle at 15% 15%, #2A8038 0%, var(--pine) 45%, var(--pine-deep) 100%);
+    color:var(--parchment); padding:26px 0; border-bottom:4px solid var(--wheat);}
+  .topbar .wrap{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+  .topbar img{width:56px; height:56px; border-radius:50%; background:#fff; padding:3px;}
+  .topbar h1{color:#fff; font-size:22px;}
+  .topbar .sub{color:#DBDBC8; font-size:13px;}
+
+  /* Portao de token */
+  .gate{max-width:420px; margin:70px auto; background:var(--card); border:1px solid var(--line);
+    border-radius:14px; padding:28px; text-align:center; box-shadow:0 20px 50px -34px rgba(58,36,24,0.5);}
+  .gate h2{font-size:20px; color:var(--pine-deep);}
+  .gate p{color:var(--ink-soft); font-size:14px; margin:8px 0 18px;}
+  .gate input{width:100%; padding:12px 14px; border-radius:9px; border:1px solid var(--line);
+    font-family:'DM Sans',sans-serif; font-size:15px; text-align:center; letter-spacing:0.04em;}
+  .gate input:focus{outline:2px solid var(--brick); outline-offset:1px;}
+  .gate button{margin-top:14px; width:100%; background:var(--brick); color:#FBF8F0; border:none;
+    padding:13px; border-radius:10px; font-family:'DM Sans',sans-serif; font-weight:700; font-size:15px; cursor:pointer;}
+  .gate button:hover{background:var(--brick-dark);}
+  .gate .err{color:var(--brick-dark); font-size:13px; margin-top:12px; min-height:16px;}
+
+  main{padding:30px 0 60px; display:none;}
+  .toolbar{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px;}
+  .toolbar .eyebrow{font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--brick);}
+  .toolbar h2{font-size:22px; color:var(--pine-deep); margin-top:2px;}
+  .btn{background:#fff; border:1px solid var(--line); color:var(--pine); padding:10px 16px;
+    border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif;}
+  .btn:hover{background:var(--parchment);}
+
+  /* Cartoes de estatistica */
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;}
+  @media(max-width:560px){.stats{grid-template-columns:1fr;}}
+  .stat{background:var(--card); border:1px solid var(--line); border-top:3px solid var(--pine);
+    border-radius:12px; padding:16px 18px;}
+  .stat .k{font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); font-weight:700;}
+  .stat .v{font-family:'Fraunces',serif; font-weight:600; font-size:28px; color:var(--pine-deep); margin-top:4px;}
+  .stat.money{border-top-color:var(--brick);}
+  .stat.money .v{color:var(--brick);}
+
+  /* Resumo para a cozinha */
+  .kitchen{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin-bottom:24px;}
+  .kitchen h3{font-size:17px; color:var(--pine); display:flex; align-items:center; gap:10px;}
+  .kitchen h3::after{content:''; flex:1; height:1px; background:var(--line);}
+  .kitchen table{width:100%; border-collapse:collapse; margin-top:12px; font-size:14px;}
+  .kitchen td{padding:7px 0; border-bottom:1px dashed var(--line);}
+  .kitchen tr:last-child td{border-bottom:none;}
+  .kitchen td.qty{text-align:right; font-family:'Fraunces',serif; font-weight:600; color:var(--brick); white-space:nowrap; width:70px;}
+
+  /* Lista de pedidos */
+  .orders{display:flex; flex-direction:column; gap:12px;}
+  .order{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px;}
+  .order .head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .order .who{font-family:'Fraunces',serif; font-weight:600; font-size:17px; color:var(--pine-deep);}
+  .order .id{font-size:12px; color:var(--ink-soft); font-weight:700;}
+  .order .total{font-family:'Fraunces',serif; font-weight:600; color:var(--brick); font-size:17px;}
+  .order .tags{margin-top:4px; font-size:13px; color:var(--ink-soft);}
+  .order .tags b{color:var(--ink); font-weight:600;}
+  .order .items{margin-top:10px; font-size:13.5px; color:var(--ink); line-height:1.7;}
+  .order .items .q{color:var(--pine); font-weight:700;}
+  .order .obs{margin-top:8px; font-size:13px; color:var(--brick-dark);
+    background:rgba(154,75,50,0.07); border-left:3px solid var(--brick); padding:7px 12px; border-radius:0 8px 8px 0;}
+  .order .when{margin-top:8px; font-size:12px; color:var(--ink-soft);}
+  .empty{text-align:center; color:var(--ink-soft); border:1px dashed var(--line);
+    border-radius:12px; padding:30px; font-size:14px;}
+
+  /* Botao remover + modal */
+  .order .foot{margin-top:12px; padding-top:10px; border-top:1px solid var(--line); text-align:right;}
+  .del{background:transparent; border:1px solid rgba(154,75,50,0.5); color:var(--brick);
+    padding:7px 14px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer;
+    font-family:'DM Sans',sans-serif;}
+  .del:hover{background:var(--brick); color:#fff; border-color:var(--brick);}
+
+  .modal-overlay{position:fixed; inset:0; background:rgba(35,20,12,0.55); display:none;
+    align-items:center; justify-content:center; padding:20px; z-index:50;}
+  .modal-overlay.open{display:flex;}
+  .modal{width:100%; max-width:400px; background:var(--card); border-radius:14px; padding:26px 24px;
+    box-shadow:0 30px 70px -30px rgba(0,0,0,0.6); text-align:center; position:relative; overflow:hidden;}
+  .modal::before{content:''; position:absolute; top:0; left:0; right:0; height:4px;
+    background:linear-gradient(90deg,var(--brick) 0 55%,var(--wheat) 55% 100%);}
+  .modal h3{font-size:19px; color:var(--pine-deep); margin-top:4px;}
+  .modal p{margin-top:10px; font-size:14px; color:var(--ink-soft);}
+  .modal p b{color:var(--ink);}
+  .modal-actions{margin-top:22px; display:flex; gap:10px; justify-content:center;}
+  .modal-actions button{padding:11px 20px; border-radius:9px; font-size:14px; font-weight:700;
+    cursor:pointer; font-family:'DM Sans',sans-serif;}
+  .modal-cancel{background:#fff; border:1px solid var(--line); color:var(--ink);}
+  .modal-cancel:hover{background:var(--parchment);}
+  .modal-confirm{background:var(--brick); border:1px solid var(--brick); color:#FBF8F0;}
+  .modal-confirm:hover{background:var(--brick-dark);}
+  .modal-confirm:disabled{opacity:0.6; cursor:not-allowed;}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="wrap">
+      <img src="img/logo_casa_campestre_menor.png" alt="Casa Campestre">
+      <div>
+        <h1>Pedidos confirmados</h1>
+        <div class="sub">Celebração de união · Soloína &amp; Eric</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Portão de token -->
+  <div class="gate" id="gate">
+    <h2>Área restrita</h2>
+    <p>Informe o token de acesso para ver os pedidos.</p>
+    <input id="token-input" type="password" placeholder="Token de acesso" autocomplete="off">
+    <button id="gate-btn">Entrar</button>
+    <div class="err" id="gate-err"></div>
+  </div>
+
+  <main id="main">
+    <div class="wrap">
+      <div class="toolbar">
+        <div>
+          <div class="eyebrow">Acompanhamento</div>
+          <h2>Todos os pré-pedidos</h2>
+        </div>
+        <button class="btn" id="refresh">↻ Atualizar</button>
+      </div>
+
+      <div class="stats" id="stats"></div>
+      <div class="kitchen" id="kitchen"></div>
+      <div class="orders" id="orders"></div>
+    </div>
+  </main>
+
+  <!-- Modal de confirmação de remoção -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h3 id="modal-title">Remover pedido?</h3>
+      <p id="modal-text"></p>
+      <p style="margin-top:14px; text-align:left;">
+        <label for="del-token" style="display:block; font-size:12px; font-weight:700; color:var(--pine); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em;">Token de remoção</label>
+        <input id="del-token" type="password" autocomplete="off" placeholder="Token de remoção"
+          style="width:100%; padding:11px 13px; border-radius:9px; border:1px solid var(--line); font-family:'DM Sans',sans-serif; font-size:14px; text-align:center; letter-spacing:0.04em;">
+      </p>
+      <div class="modal-err" id="modal-err" style="color:var(--brick-dark); font-size:13px; min-height:16px; margin-top:8px;"></div>
+      <div class="modal-actions">
+        <button class="modal-cancel" id="modal-cancel">Cancelar</button>
+        <button class="modal-confirm" id="modal-confirm">Remover</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const formatBRL = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+  const gate = document.getElementById('gate');
+  const main = document.getElementById('main');
+  const errEl = document.getElementById('gate-err');
+  let token = null;
+
+  function esc(s){ return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  async function carregar(tk){
+    errEl.textContent = '';
+    try{
+      const resp = await fetch('/api/pedidos?token=' + encodeURIComponent(tk));
+      if(resp.status === 401){ errEl.textContent = 'Token inválido. Tente novamente.'; return false; }
+      if(!resp.ok) throw new Error('erro');
+      const data = await resp.json();
+      token = tk;
+      gate.style.display = 'none';
+      main.style.display = 'block';
+      render(data.pedidos || []);
+      return true;
+    }catch(e){
+      if(location.protocol === 'file:'){
+        errEl.innerHTML = 'Você abriu o arquivo direto (file://). Abra pelo servidor: '
+          + 'rode <b>python server.py</b> e acesse <b>http://localhost:8000/pedidos.html</b>.';
+      }else{
+        errEl.innerHTML = 'Não consegui falar com o servidor. Confira se ele está rodando '
+          + '(<b>python server.py</b>) na mesma máquina.';
+      }
+      return false;
+    }
+  }
+
+  function render(pedidos){
+    // Estatísticas
+    const totalPedidos = pedidos.length;
+    let totalPizzas = 0, totalValor = 0;
+    const cozinha = {};   // nome do item -> quantidade somada
+    pedidos.forEach(p => {
+      totalValor += Number(p.total || 0);
+      (p.itens || []).forEach(i => {
+        totalPizzas += Number(i.qty || 0);
+        cozinha[i.name] = (cozinha[i.name] || 0) + Number(i.qty || 0);
+      });
+    });
+
+    document.getElementById('stats').innerHTML =
+        '<div class="stat"><div class="k">Pedidos</div><div class="v">' + totalPedidos + '</div></div>'
+      + '<div class="stat"><div class="k">Pizzas no total</div><div class="v">' + totalPizzas + '</div></div>'
+      + '<div class="stat money"><div class="k">Valor total</div><div class="v">' + formatBRL(totalValor) + '</div></div>';
+
+    // Resumo para a cozinha (itens consolidados, do maior para o menor)
+    const kEl = document.getElementById('kitchen');
+    const linhas = Object.entries(cozinha).sort((a,b) => b[1] - a[1]);
+    if(linhas.length === 0){
+      kEl.style.display = 'none';
+    }else{
+      kEl.style.display = 'block';
+      kEl.innerHTML = '<h3>🍕 Resumo para a cozinha</h3><table>'
+        + linhas.map(([nome, qtd]) =>
+            '<tr><td>' + esc(nome) + '</td><td class="qty">' + qtd + '×</td></tr>').join('')
+        + '</table>';
+    }
+
+    // Lista de pedidos
+    const oEl = document.getElementById('orders');
+    if(pedidos.length === 0){
+      oEl.innerHTML = '<div class="empty">Nenhum pedido confirmado ainda.</div>';
+      return;
+    }
+    oEl.innerHTML = pedidos.map(p => {
+      const itens = (p.itens || []).map(i =>
+        '<span class="q">' + i.qty + '×</span> ' + esc(i.name)
+        + ' <span style="color:var(--ink-soft)">· ' + formatBRL(i.lineTotal != null ? i.lineTotal : i.qty * i.unitPrice) + '</span>'
+      ).join('<br>');
+      let tags = [];
+      if(p.mesa) tags.push('<b>Mesa:</b> ' + esc(p.mesa));
+      if(p.telefone) tags.push('<b>WhatsApp:</b> ' + esc(p.telefone));
+      const when = p.criado_em ? new Date(p.criado_em).toLocaleString('pt-BR') : '';
+      return '<div class="order">'
+        + '<div class="head"><div><span class="who">' + esc(p.nome) + '</span> '
+        + '<span class="id">#' + p.id + '</span></div>'
+        + '<span class="total">' + formatBRL(p.total) + '</span></div>'
+        + (tags.length ? '<div class="tags">' + tags.join(' · ') + '</div>' : '')
+        + '<div class="items">' + itens + '</div>'
+        + (p.observacoes ? '<div class="obs">📝 ' + esc(p.observacoes) + '</div>' : '')
+        + (when ? '<div class="when">' + when + '</div>' : '')
+        + '<div class="foot"><button class="del" data-id="' + p.id
+        + '" data-nome="' + esc(p.nome) + '">Remover</button></div>'
+        + '</div>';
+    }).join('');
+  }
+
+  document.getElementById('gate-btn').addEventListener('click', () =>
+    carregar(document.getElementById('token-input').value.trim()));
+  document.getElementById('token-input').addEventListener('keydown', e => {
+    if(e.key === 'Enter') carregar(e.target.value.trim());
+  });
+  document.getElementById('refresh').addEventListener('click', () => { if(token) carregar(token); });
+
+  /* ---------- Remoção de pedido (com modal de confirmação) ---------- */
+  const modal = document.getElementById('modal');
+  const modalText = document.getElementById('modal-text');
+  const modalErr = document.getElementById('modal-err');
+  const delTokenInp = document.getElementById('del-token');
+  const confirmBtn = document.getElementById('modal-confirm');
+  let pendingId = null;
+  let lastDeleteToken = '';   // lembra o token na sessão p/ remover vários seguidos
+
+  function openModal(id, nome){
+    pendingId = id;
+    modalErr.textContent = '';
+    modalText.innerHTML = 'Tem certeza que deseja remover o pedido <b>#' + id
+      + '</b> de <b>' + esc(nome) + '</b>?<br>Essa ação não pode ser desfeita.';
+    delTokenInp.value = lastDeleteToken;
+    modal.classList.add('open');
+    delTokenInp.focus();
+  }
+  function closeModal(){ modal.classList.remove('open'); pendingId = null; }
+
+  document.getElementById('orders').addEventListener('click', (e) => {
+    const btn = e.target.closest('.del');
+    if(btn) openModal(Number(btn.dataset.id), btn.dataset.nome || '');
+  });
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
+
+  async function confirmDelete(){
+    if(pendingId == null) return;
+    const tk = delTokenInp.value.trim();
+    if(!tk){ modalErr.textContent = 'Informe o token de remoção.'; return; }
+    modalErr.textContent = '';
+    confirmBtn.disabled = true; confirmBtn.textContent = 'Removendo...';
+    try{
+      const resp = await fetch('/api/pedidos/' + pendingId + '?token=' + encodeURIComponent(tk),
+        { method: 'DELETE' });
+      if(resp.status === 401){ modalErr.textContent = 'Token de remoção inválido.'; return; }
+      if(!resp.ok) throw new Error('erro');
+      lastDeleteToken = tk;
+      closeModal();
+      carregar(token);   // recarrega a lista usando o token de listagem
+    }catch(e){
+      modalErr.textContent = 'Não deu para remover agora. Tente de novo.';
+    }finally{
+      confirmBtn.disabled = false; confirmBtn.textContent = 'Remover';
+    }
+  }
+  document.getElementById('modal-confirm').addEventListener('click', confirmDelete);
+  delTokenInp.addEventListener('keydown', (e) => { if(e.key === 'Enter') confirmDelete(); });
+
+  // Se o token vier na URL (?token=...), entra direto
+  const urlToken = new URLSearchParams(location.search).get('token');
+  if(urlToken) carregar(urlToken);
+</script>
+</body>
+</html>

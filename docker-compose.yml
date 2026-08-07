@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    image: casa-campestre
+    container_name: casa-campestre
+    ports:
+      - "8000:8000"
+    environment:
+      # >>> Troque estes tokens antes de colocar no ar <<<
+      ADMIN_TOKEN: "casa-campestre-2026"
+      DELETE_TOKEN: "casa-campestre-remover-2026"
+      PORT: "8000"
+      DATA_DIR: "/app/data"
+    volumes:
+      # Banco SQLite e backup JSON ficam aqui, acessiveis na pasta ./data
+      - ./data:/app/data
+    restart: unless-stopped

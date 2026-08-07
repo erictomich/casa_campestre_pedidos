@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedido confirmado · Casa Campestre</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&family=Great+Vibes&display=swap');
+  :root{
+    --pine:#1E6B2E; --pine-deep:#16451F; --brick:#9A4B32; --brick-dark:#7C3B27;
+    --wheat:#D9B65C; --mauve:#9C6E6C; --mauve-soft:#BE928C; --gold:#B8933E;
+    --parchment:#F1ECDD; --card:#FBF8F0; --ink:#3A2418; --ink-soft:#5A5A4E; --line:#E1D9C3;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; min-height:100vh; color:var(--ink); font-family:'DM Sans',sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+    background:radial-gradient(130% 80% at 50% -10%, #F8F3E6 0%, #F0E8D3 55%, #EADFC6 100%);
+    display:flex; align-items:center; justify-content:center; padding:32px 18px;}
+  .card{width:100%; max-width:560px; background:var(--card); border:1px solid var(--line);
+    border-radius:16px; padding:38px 30px 32px; text-align:center; position:relative; overflow:hidden;
+    box-shadow:0 24px 60px -34px rgba(58,36,24,0.5);}
+  .card::before{content:''; position:absolute; top:0; left:0; right:0; height:5px;
+    background:linear-gradient(90deg,var(--brick) 0 55%,var(--wheat) 55% 100%);}
+  .logo{width:78px; height:78px; border-radius:50%; background:#fff; padding:4px;
+    box-shadow:0 8px 22px -12px rgba(58,36,24,0.55);}
+  .check{width:52px; height:52px; margin:14px auto 0; border-radius:50%; background:var(--pine);
+    color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px;}
+  h1{font-family:'Fraunces',serif; font-weight:600; font-size:26px; color:var(--pine-deep); margin:14px 0 0;}
+  .names{font-family:'Great Vibes',cursive; font-size:30px; color:var(--mauve); line-height:1; margin-top:2px;}
+  .greet{margin-top:12px; color:var(--ink-soft); font-size:15.5px;}
+  .greet b{color:var(--ink);}
+  .pedido-id{display:inline-block; margin-top:14px; font-family:'Fraunces',serif; font-weight:600;
+    font-size:13px; color:var(--pine); background:#fff; border:1px solid var(--line);
+    border-radius:999px; padding:5px 14px; letter-spacing:0.04em;}
+  .resumo{margin-top:22px; text-align:left; background:#fff; border:1px solid var(--line);
+    border-radius:12px; padding:18px 18px 14px;}
+  .resumo h2{font-family:'DM Sans',sans-serif; font-size:12px; text-transform:uppercase;
+    letter-spacing:0.09em; color:var(--ink-soft); font-weight:700; margin:0 0 10px;}
+  .item{display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:5px 0;
+    border-bottom:1px dashed var(--line);}
+  .item:last-of-type{border-bottom:none;}
+  .item .q{color:var(--pine); font-weight:700;}
+  .item .v{color:var(--ink-soft); white-space:nowrap;}
+  .total{display:flex; justify-content:space-between; align-items:baseline; margin-top:12px;
+    padding-top:12px; border-top:1px solid var(--line);}
+  .total span{font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft);}
+  .total strong{font-family:'Fraunces',serif; font-size:22px; color:var(--brick);}
+  .meta{margin-top:12px; font-size:13px; color:var(--ink-soft); text-align:left;}
+  .meta div{margin-top:3px;}
+  .meta b{color:var(--ink); font-weight:600;}
+  .event-note{margin-top:20px; font-size:13px; color:var(--pine); background:rgba(217,182,92,0.14);
+    border:1px solid rgba(184,147,62,0.35); border-radius:10px; padding:11px 14px;}
+  .event-note b{color:var(--pine-deep);}
+  .back{display:inline-block; margin-top:22px; text-decoration:none; font-weight:700; font-size:14px;
+    color:var(--pine); border:1px solid var(--line); background:#fff; padding:11px 20px; border-radius:10px;}
+  .back:hover{background:var(--parchment);}
+  .empty{margin-top:16px; color:var(--ink-soft); font-size:15px;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo" src="img/logo_casa_campestre_menor.png" alt="Casa Campestre">
+    <div class="check">✓</div>
+    <h1>Pedido confirmado!</h1>
+    <div class="names">Soloína &amp; Eric</div>
+    <div id="conteudo"></div>
+    <a class="back" href="/">Fazer outro pedido</a>
+  </div>
+
+<script>
+  const formatBRL = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+  const el = document.getElementById('conteudo');
+
+  let order = null;
+  try { order = JSON.parse(sessionStorage.getItem('ultimoPedido') || 'null'); } catch(e) {}
+
+  if (!order || !order.items || !order.items.length) {
+    el.innerHTML = '<p class="empty">Seu pedido foi registrado. 🍕<br>'
+      + 'Se quiser conferir os detalhes, faça um novo pedido pela página inicial.</p>';
+  } else {
+    const itemsHTML = order.items.map(i =>
+      '<div class="item"><span class="q">' + i.qty + '× ' + i.name + '</span>'
+      + '<span class="v">' + formatBRL(i.lineTotal != null ? i.lineTotal : i.qty * i.unitPrice) + '</span></div>'
+    ).join('');
+
+    let metaHTML = '';
+    if (order.table)  metaHTML += '<div><b>Mesa/grupo:</b> ' + order.table + '</div>';
+    if (order.phone)  metaHTML += '<div><b>WhatsApp:</b> ' + order.phone + '</div>';
+    if (order.notes)  metaHTML += '<div><b>Observações:</b> ' + order.notes + '</div>';
+
+    el.innerHTML =
+      '<p class="greet">Obrigado, <b>' + order.name + '</b>! Recebemos seu pré-pedido. 🎉</p>'
+      + (order.id ? '<div class="pedido-id">Pedido nº ' + order.id + '</div>' : '')
+      + '<div class="resumo"><h2>Resumo do pedido</h2>' + itemsHTML
+      + '<div class="total"><span>Total</span><strong>' + formatBRL(order.total) + '</strong></div></div>'
+      + (metaHTML ? '<div class="meta">' + metaHTML + '</div>' : '')
+      + '<div class="event-note">Nos vemos na <b>Casa Campestre</b> · <b>02 de setembro</b>, quarta-feira às <b>18:30</b>. As pizzas serão preparadas fresquinhas para a festa! 🌾</div>';
+  }
+</script>
+</body>
+</html>

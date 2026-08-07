@@ -1,0 +1,25 @@
+[
+  {
+    "id": 1,
+    "nome": "Teste",
+    "mesa": "",
+    "telefone": "31999999234",
+    "observacoes": "Testando as observações. \n\nTeste de quebra de linha.",
+    "itens": [
+      {
+        "name": "Abobrinha com Alho e Parmesão (30 cm · 8 fatias)",
+        "qty": 1,
+        "unitPrice": 85,
+        "lineTotal": 85
+      },
+      {
+        "name": "½ Calabresa Artesanal + ½ Frango com Catupiry (30 cm · 8 fatias)",
+        "qty": 1,
+        "unitPrice": 85,
+        "lineTotal": 85
+      }
+    ],
+    "total": 170.0,
+    "criado_em": "2026-08-07T12:23:29.738Z"
+  }
+]
