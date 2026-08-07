@@ -254,7 +254,7 @@
       <p class="invite-place">Casa Campestre<small>Casa Branca / MG</small></p>
       <div class="invite-divider">🍕</div>
       <p class="invite-purpose">Este é o <b>pré-pedido das pizzas</b> — para agilizar o serviço no dia da celebração. Escolha os sabores da sua mesa com antecedência e a cozinha prepara tudo fresquinho para a festa.</p>
-      <p class="invite-deadline">Pedidos até <b>[preencher prazo]</b></p>
+      <p class="invite-deadline">Pedidos até <b>26 de agosto de 2026</b></p>
     </div>
   </header>
 
@@ -315,7 +315,7 @@
     <div class="wrap">
       <div class="eyebrow">Último passo</div>
       <h2>Quem está fazendo o pedido?</h2>
-      <p class="section-sub">Preencha os dados do responsável para associarmos o pedido à mesa certa.</p>
+      <p class="section-sub">Preencha seu nome para confirmarmos o pedido.</p>
 
       <div id="order-form">
         <div class="cart-summary">
@@ -325,14 +325,6 @@
         <div class="field">
           <label for="f-name">Nome completo *</label>
           <input id="f-name" type="text" placeholder="Seu nome">
-        </div>
-        <div class="field">
-          <label for="f-table">Mesa ou grupo <span class="hint">(opcional)</span></label>
-          <input id="f-table" type="text" placeholder="Ex: Mesa 5, ou Família Andrade">
-        </div>
-        <div class="field">
-          <label for="f-phone">WhatsApp para confirmação <span class="hint">(opcional)</span></label>
-          <input id="f-phone" type="tel" placeholder="(00) 00000-0000">
         </div>
         <div class="field">
           <label for="f-notes">Observações <span class="hint">(alergias, restrições, etc.)</span></label>
@@ -542,8 +534,6 @@ function updateCart(){
 /* ---------- SUBMIT ---------- */
 document.getElementById('submit-btn').addEventListener('click', async () => {
   const name = document.getElementById('f-name').value.trim();
-  const table = document.getElementById('f-table').value.trim();
-  const phone = document.getElementById('f-phone').value.trim();
   const notes = document.getElementById('f-notes').value.trim();
   const errorEl = document.getElementById('form-error');
   const btn = document.getElementById('submit-btn');
@@ -558,7 +548,7 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = 'Enviando...';
 
   const total = items.reduce((s,i)=>s+i.lineTotal,0);
-  const order = { name, table, phone, notes, items, total, submittedAt: new Date().toISOString() };
+  const order = { name, notes, items, total, submittedAt: new Date().toISOString() };
 
   try{
     const resp = await fetch('/api/pedidos', {
