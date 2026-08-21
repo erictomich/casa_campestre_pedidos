@@ -134,7 +134,10 @@
           <div class="eyebrow">Acompanhamento</div>
           <h2>Todos os pré-pedidos</h2>
         </div>
-        <button class="btn" id="refresh">↻ Atualizar</button>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" id="download-txt">⬇ Baixar TXT</button>
+          <button class="btn" id="refresh">↻ Atualizar</button>
+        </div>
       </div>
 
       <div class="stats" id="stats"></div>
@@ -167,6 +170,7 @@
   const main = document.getElementById('main');
   const errEl = document.getElementById('gate-err');
   let token = null;
+  let ultimosPedidos = [];
 
   function esc(s){ return String(s == null ? '' : s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -196,6 +200,7 @@
   }
 
   function render(pedidos){
+    ultimosPedidos = pedidos;
     // Estatísticas
     const totalPedidos = pedidos.length;
     let totalPizzas = 0, totalValor = 0;
@@ -254,6 +259,80 @@
         + '</div>';
     }).join('');
   }
+
+  /* ---------- Exportar TXT (resumo da cozinha + pedidos separados) ---------- */
+  function montarTxt(pedidos){
+    const linhas = [];
+    const agora = new Date().toLocaleString('pt-BR');
+    linhas.push('CASA CAMPESTRE - PEDIDOS');
+    linhas.push('Gerado em: ' + agora);
+    linhas.push('='.repeat(50));
+    linhas.push('');
+
+    // Resumo para a cozinha
+    const cozinha = {};
+    let totalPizzas = 0, totalValor = 0;
+    pedidos.forEach(p => {
+      totalValor += Number(p.total || 0);
+      (p.itens || []).forEach(i => {
+        totalPizzas += Number(i.qty || 0);
+        cozinha[i.name] = (cozinha[i.name] || 0) + Number(i.qty || 0);
+      });
+    });
+
+    linhas.push('RESUMO PARA A COZINHA');
+    linhas.push('-'.repeat(50));
+    const itensCozinha = Object.entries(cozinha).sort((a, b) => b[1] - a[1]);
+    if(itensCozinha.length === 0){
+      linhas.push('(nenhum item)');
+    }else{
+      itensCozinha.forEach(([nome, qtd]) => linhas.push(qtd + 'x  ' + nome));
+    }
+    linhas.push('');
+    linhas.push('Total de pedidos: ' + pedidos.length);
+    linhas.push('Total de pizzas: ' + totalPizzas);
+    linhas.push('Valor total: ' + formatBRL(totalValor));
+    linhas.push('');
+    linhas.push('='.repeat(50));
+    linhas.push('PEDIDOS SEPARADOS');
+    linhas.push('='.repeat(50));
+    linhas.push('');
+
+    pedidos.forEach(p => {
+      linhas.push('Pedido #' + p.id + ' - ' + (p.nome || ''));
+      if(p.mesa) linhas.push('Mesa: ' + p.mesa);
+      if(p.telefone) linhas.push('WhatsApp: ' + p.telefone);
+      (p.itens || []).forEach(i => {
+        const lineTotal = i.lineTotal != null ? i.lineTotal : i.qty * i.unitPrice;
+        linhas.push('  ' + i.qty + 'x ' + i.name + ' - ' + formatBRL(lineTotal));
+      });
+      linhas.push('Total: ' + formatBRL(p.total));
+      if(p.observacoes) linhas.push('Obs: ' + p.observacoes);
+      if(p.criado_em) linhas.push('Recebido em: ' + new Date(p.criado_em).toLocaleString('pt-BR'));
+      linhas.push('-'.repeat(50));
+      linhas.push('');
+    });
+
+    return linhas.join('\n');
+  }
+
+  document.getElementById('download-txt').addEventListener('click', () => {
+    if(ultimosPedidos.length === 0){
+      alert('Nenhum pedido carregado para exportar.');
+      return;
+    }
+    const texto = montarTxt(ultimosPedidos);
+    const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dataArquivo = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = 'pedidos-casa-campestre-' + dataArquivo + '.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
 
   document.getElementById('gate-btn').addEventListener('click', () =>
     carregar(document.getElementById('token-input').value.trim()));
