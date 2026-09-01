@@ -142,6 +142,7 @@
 
       <div class="stats" id="stats"></div>
       <div class="kitchen" id="kitchen"></div>
+      <div class="kitchen" id="flavors"></div>
       <div class="orders" id="orders"></div>
     </div>
   </main>
@@ -175,6 +176,25 @@
   function esc(s){ return String(s == null ? '' : s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+  // Extrai o(s) sabor(es) de um nome de item, com a fracao de pizza que representam.
+  // "Margherita (30 cm · 8 fatias)" -> [["Margherita", 1]]
+  // "½ Calabresa + ½ Frango (30 cm · 8 fatias)" -> [["Calabresa", 0.5], ["Frango", 0.5]]
+  function parseSabores(nomeItem){
+    const meio = nomeItem.match(/^½\s*(.+?)\s*\+\s*½\s*(.+?)\s*\(/);
+    if(meio) return [[meio[1].trim(), 0.5], [meio[2].trim(), 0.5]];
+    const inteira = nomeItem.match(/^(.+?)\s*\(/);
+    return [[(inteira ? inteira[1] : nomeItem).trim(), 1]];
+  }
+
+  // Formata uma quantidade (multipla de 0.5) como "2", "½" ou "2 ½".
+  function formatFracaoPizza(qtd){
+    const arredondado = Math.round(qtd * 2) / 2;
+    const inteiro = Math.floor(arredondado);
+    const temMeia = arredondado - inteiro >= 0.5;
+    if(!temMeia) return String(inteiro);
+    return inteiro > 0 ? (inteiro + ' e ½') : '½';
+  }
+
   async function carregar(tk){
     errEl.textContent = '';
     try{
@@ -205,11 +225,16 @@
     const totalPedidos = pedidos.length;
     let totalPizzas = 0, totalValor = 0;
     const cozinha = {};   // nome do item -> quantidade somada
+    const sabores = {};   // sabor -> equivalente em pizzas inteiras
     pedidos.forEach(p => {
       totalValor += Number(p.total || 0);
       (p.itens || []).forEach(i => {
-        totalPizzas += Number(i.qty || 0);
-        cozinha[i.name] = (cozinha[i.name] || 0) + Number(i.qty || 0);
+        const qty = Number(i.qty || 0);
+        totalPizzas += qty;
+        cozinha[i.name] = (cozinha[i.name] || 0) + qty;
+        parseSabores(i.name).forEach(([sabor, fracao]) => {
+          sabores[sabor] = (sabores[sabor] || 0) + fracao * qty;
+        });
       });
     });
 
@@ -228,6 +253,19 @@
       kEl.innerHTML = '<h3>🍕 Resumo para a cozinha</h3><table>'
         + linhas.map(([nome, qtd]) =>
             '<tr><td>' + esc(nome) + '</td><td class="qty">' + qtd + '×</td></tr>').join('')
+        + '</table>';
+    }
+
+    // Pizzas por sabor (equivalente em pizzas inteiras, somando as metades)
+    const fEl = document.getElementById('flavors');
+    const linhasSabores = Object.entries(sabores).sort((a,b) => b[1] - a[1]);
+    if(linhasSabores.length === 0){
+      fEl.style.display = 'none';
+    }else{
+      fEl.style.display = 'block';
+      fEl.innerHTML = '<h3>🍕 Pizzas por sabor</h3><table>'
+        + linhasSabores.map(([sabor, qtd]) =>
+            '<tr><td>' + esc(sabor) + '</td><td class="qty">' + formatFracaoPizza(qtd) + '</td></tr>').join('')
         + '</table>';
     }
 
@@ -271,12 +309,17 @@
 
     // Resumo para a cozinha
     const cozinha = {};
+    const sabores = {};
     let totalPizzas = 0, totalValor = 0;
     pedidos.forEach(p => {
       totalValor += Number(p.total || 0);
       (p.itens || []).forEach(i => {
-        totalPizzas += Number(i.qty || 0);
-        cozinha[i.name] = (cozinha[i.name] || 0) + Number(i.qty || 0);
+        const qty = Number(i.qty || 0);
+        totalPizzas += qty;
+        cozinha[i.name] = (cozinha[i.name] || 0) + qty;
+        parseSabores(i.name).forEach(([sabor, fracao]) => {
+          sabores[sabor] = (sabores[sabor] || 0) + fracao * qty;
+        });
       });
     });
 
@@ -292,6 +335,15 @@
     linhas.push('Total de pedidos: ' + pedidos.length);
     linhas.push('Total de pizzas: ' + totalPizzas);
     linhas.push('Valor total: ' + formatBRL(totalValor));
+    linhas.push('');
+    linhas.push('PIZZAS POR SABOR');
+    linhas.push('-'.repeat(50));
+    const linhasSabores = Object.entries(sabores).sort((a, b) => b[1] - a[1]);
+    if(linhasSabores.length === 0){
+      linhas.push('(nenhum sabor)');
+    }else{
+      linhasSabores.forEach(([sabor, qtd]) => linhas.push(formatFracaoPizza(qtd) + '  ' + sabor));
+    }
     linhas.push('');
     linhas.push('='.repeat(50));
     linhas.push('PEDIDOS SEPARADOS');
